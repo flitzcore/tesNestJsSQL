@@ -9,4 +9,9 @@ export class AiController {
   sendMessage(@Body() body: { message: string }): Promise<any> {
     return this.aiService.sendMessageToOpenAI(body.message);
   }
+
+  @Post('query-user')
+  queryUser(@Body() body: { sqlCommand: string }): Promise<any> {
+    return this.aiService.queryUser(body.sqlCommand);
+  }
 }
