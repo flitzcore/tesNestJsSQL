@@ -8,6 +8,7 @@ import {
   UsePipes,
   Query,
   UseGuards,
+  Put,
 } from '@nestjs/common';
 import { ItemService } from './item.service';
 import { Item } from './item.entity';
@@ -33,7 +34,6 @@ export class ItemController {
     @Body() item: Item,
     @GetAccount('sub') accountId: number,
   ): Promise<Item> {
-    console.log(accountId);
     return this.itemService.create(item, accountId);
   }
 
@@ -53,6 +53,16 @@ export class ItemController {
     @GetAccount('sub') accountId: number,
   ): Promise<Item | null> {
     return this.itemService.findOne(+id, accountId);
+  }
+
+  @Put(':id')
+  @UsePipes(new JoiValidationPipe(updateItemSchema))
+  update(
+    @Param('id') id: string,
+    @Body() item: Item,
+    @GetAccount('sub') accountId: number,
+  ) {
+    return this.itemService.update(+id, item, accountId);
   }
 
   @Delete(':id')

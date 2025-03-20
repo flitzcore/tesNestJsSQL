@@ -14,6 +14,16 @@ export class ItemService {
   async create(item: Item, accountId: number): Promise<Item> {
     return this.itemsRepository.save({ ...item, accountId });
   }
+  async update(id: number, item: Partial<Item>, accountId: number) {
+    const result = await this.itemsRepository.update({ id, accountId }, item);
+
+    if (result.affected === 0) {
+      throw new UnauthorizedException('Item not found or access denied');
+    }
+
+    // Fetch and return the updated entity
+    return result;
+  }
 
   async findAll(query: any, accountId: number): Promise<Item[]> {
     const { name, description, price } = query;

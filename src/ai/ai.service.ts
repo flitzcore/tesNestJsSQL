@@ -95,7 +95,7 @@ export class AiService {
       // get the current user format
       const userSchema = await this.getUserSchema();
       const userSchemaString = JSON.stringify(userSchema);
-      console.log(userSchemaString);
+
       const prompt = `
       ${message}
 
@@ -118,7 +118,7 @@ export class AiService {
       );
 
       const tool_call = response.data.choices[0].message.tool_calls[0];
-      console.log(tool_call);
+
       const function_name = tool_call.function.name;
       let result;
       if (function_name === 'createUser') {
@@ -131,18 +131,16 @@ export class AiService {
         const sqlCommand = args.sqlCommand;
         result = await this.queryUser(sqlCommand);
       }
-      console.log(result);
+
       const message2 = response.data.choices[0].message; // append model's function call message
       const messagesArray = Array.isArray(message2) ? message2 : [message2];
 
-      console.log(messagesArray);
       // Append the result message
       messagesArray.push({
         role: 'tool',
         tool_call_id: tool_call.id,
         content: result,
       });
-      console.log(message2);
 
       const response2 = await axios.post(
         this.openaiApiUrl,

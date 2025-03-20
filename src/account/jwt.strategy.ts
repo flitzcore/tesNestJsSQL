@@ -6,27 +6,33 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { Account } from './account.entity';
 import { TokenPayload } from './auth.types';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
+    private readonly configService: ConfigService,
     @InjectRepository(Account)
-    private accountsRepository: Repository<Account>,
+    private readonly accountsRepository: Repository<Account>,
   ) {
+    const jwtSecret = configService.get<string>('JWT_SECRET');
+
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET environment variable is not defined');
+    }
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.JWT_SECRET || 'your-secret-key',
+      secretOrKey: jwtSecret,
       ignoreExpiration: false,
+      algorithms: ['HS256'],
     });
   }
 
   async validate(payload: TokenPayload): Promise<TokenPayload> {
-    console.log('JWT Strategy validate() called with payload:', payload);
-
     if (payload.type !== 'access') {
-      console.log('Invalid token type:', payload.type);
       throw new UnauthorizedException('Invalid token type');
     }
 
@@ -34,14 +40,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       where: { id: payload.sub },
     });
 
-    console.log('Found account:', account);
-
     if (!account) {
-      console.log('No account found for sub:', payload.sub);
       throw new UnauthorizedException();
     }
 
-    // Return the payload instead of the account
     return payload;
   }
 }
